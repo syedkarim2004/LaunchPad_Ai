@@ -1,0 +1,48 @@
+# FastAPI and server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+websockets==12.0
+
+# LangChain and LangGraph
+langchain==0.2.16
+langgraph==0.2.28
+langchain-openai==0.1.23
+langchain-community==0.2.16
+langchain-core==0.2.39
+
+# Groq LLM (FREE - Llama 3.1)
+langchain-groq==0.1.9
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.13.0
+
+# Redis for caching
+redis==5.0.1
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+
+# PDF Generation
+reportlab==4.0.7
+pillow==10.1.0
+
+# OCR for document extraction
+pytesseract==0.3.10
+pdf2image==1.16.3
+
+# Data validation
+pydantic==2.7.4
+pydantic-settings==2.3.0
+email-validator==2.2.0
+
+# HTTP client
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Utilities
+python-dateutil==2.8.2

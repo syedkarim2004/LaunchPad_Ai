@@ -16,7 +16,8 @@
     "framer-motion": "^10.16.16",
     "tailwindcss": "^3.4.0",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32"
+    "postcss": "^8.4.32",
+    "next-auth": "^4.24.5"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

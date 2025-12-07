@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { 
   Send, 
   Paperclip, 
@@ -24,7 +25,9 @@ import {
   Calculator,
   CreditCard,
   TrendingUp,
-  Settings
+  Settings,
+  LogOut,
+  LogIn
 } from 'lucide-react';
 
 interface Message {
@@ -33,7 +36,7 @@ interface Message {
   sender: 'user' | 'bot';
   timestamp: Date;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
-  agentType?: 'master' | 'sales' | 'verification' | 'underwriting' | 'sanction';
+  agentType?: 'master' | 'sales' | 'verification' | 'underwriting' | 'sanction' | 'document';
 }
 
 interface ChatWidgetProps {
@@ -49,7 +52,8 @@ const agentInfo = {
   verification: { name: 'Verification Agent', color: 'from-purple-400 to-violet-500', icon: Shield },
   underwriting: { name: 'Underwriting Agent', color: 'from-blue-400 to-indigo-500', icon: FileText },
   sanction: { name: 'Sanction Agent', color: 'from-teal-400 to-cyan-500', icon: CheckCircle2 },
-};
+  document: { name: 'Document Agent', color: 'from-pink-400 to-rose-500', icon: FileText },
+} as const;
 
 const quickReplies = [
   "I want a personal loan",
@@ -90,13 +94,20 @@ const actionButtons = [
 ];
 
 export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMessage }: ChatWidgetProps) {
+  const { data: session, status } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<keyof typeof agentInfo>('master');
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [showUploadMenu, setShowUploadMenu] = useState(false);
+  const [uploadDocType, setUploadDocType] = useState<'aadhaar' | 'pan' | 'salary_slip' | 'bank_statement'>('aadhaar');
+  const [customerId, setCustomerId] = useState<string>('guest');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const websocketRef = useRef<WebSocket | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -126,10 +137,76 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
     }
   }, [initialMessage, isExpanded]);
 
+  // Connect to backend WebSocket for real agent responses
+  useEffect(() => {
+    // Connect for both authenticated users and guests
+    // For guests, use "guest" as the customer ID
+    // For authenticated users, use their email
+    const currentCustomerId = status === 'authenticated' && session?.user?.email
+      ? encodeURIComponent(session.user.email)
+      : 'guest';
+    
+    setCustomerId(currentCustomerId);
+    
+    const wsUrl = `ws://localhost:8000/ws/chat/${currentCustomerId}`;
+    const ws = new WebSocket(wsUrl);
+    websocketRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('Chat WebSocket connected');
+      setIsConnected(true);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'bot_message') {
+          const newMessage: Message = {
+            id: Date.now().toString(),
+            text: data.content,
+            sender: 'bot',
+            timestamp: new Date(),
+            agentType: data.agent as any
+          };
+          setMessages(prev => [...prev, newMessage]);
+          const incomingAgent = (data.agent as string) || 'master';
+          const safeAgent: keyof typeof agentInfo =
+            (incomingAgent in agentInfo ? incomingAgent : 'master') as keyof typeof agentInfo;
+          setCurrentAgent(safeAgent);
+          setIsTyping(false);
+        }
+      } catch (e) {
+        console.error('Failed to parse WS message', e);
+      }
+    };
+
+    ws.onerror = (event) => {
+      console.error('Chat WebSocket error', event);
+      setIsConnected(false);
+    };
+
+    ws.onclose = () => {
+      console.log('Chat WebSocket closed');
+      setIsConnected(false);
+    };
+
+    return () => {
+      ws.close();
+      websocketRef.current = null;
+      setIsConnected(false);
+    };
+  }, [session, status]);
+
   const simulateBotResponse = (userMessage: string) => {
     setIsTyping(true);
-    
-    // Simulate agent switching based on conversation flow
+
+    // If WebSocket is connected, send the message to backend and let agents respond
+    if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+      websocketRef.current.send(JSON.stringify({ content: userMessage }));
+      return;
+    }
+
+    // Fallback: use existing mock responses (in case backend is down)
     const lowerMessage = userMessage.toLowerCase();
     let responseAgent: keyof typeof agentInfo = 'master';
     let responseText = '';
@@ -248,11 +325,110 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
     handleSend();
   };
 
+  const handlePlusClick = () => {
+    // Toggle upload menu - works for both logged in and guest users
+    setShowUploadMenu((prev) => !prev);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      // Use the selected document type from the menu
+      formData.append('document_type', uploadDocType);
+      // Use email if logged in, otherwise use 'guest' identifier
+      formData.append('customer_id', session?.user?.email || customerId);
+
+      const response = await fetch('http://localhost:8000/api/documents/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const confirmation: Message = {
+          id: Date.now().toString(),
+          text: data.message || 'Document uploaded successfully. ✅',
+          sender: 'bot',
+          timestamp: new Date(),
+          agentType: 'document',
+        };
+        setMessages(prev => [...prev, confirmation]);
+      } else {
+        const errorText = await response.text();
+        const errorMsg: Message = {
+          id: Date.now().toString(),
+          text: 'Failed to upload document. Please try again.',
+          sender: 'bot',
+          timestamp: new Date(),
+          agentType: 'document',
+        };
+        console.error('Upload error:', errorText);
+        setMessages(prev => [...prev, errorMsg]);
+      }
+    } catch (err) {
+      console.error('Upload exception:', err);
+    } finally {
+      // Reset the input so the same file can be selected again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setShowUploadMenu(false);
+    }
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const CurrentAgentIcon = agentInfo[currentAgent].icon;
+  // Very small markdown-style link renderer: turns [label](url) into <a href="url">label</a>
+  const renderMessageText = (text: string) => {
+    const parts: React.ReactNode[] = [];
+    const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+      const label = match[1];
+      let url = match[2];
+
+      // If backend sends a relative /uploads path or a localhost:3000/uploads URL,
+      // rewrite it to point to the backend (port 8000) which actually serves the files.
+      if (url.startsWith('/uploads')) {
+        url = `http://localhost:8000${url}`;
+      } else if (url.startsWith('http://localhost:3000/uploads') || url.startsWith('https://localhost:3000/uploads')) {
+        url = url.replace('localhost:3000', 'localhost:8000');
+      }
+      parts.push(
+        <a
+          key={parts.length}
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          {label}
+        </a>
+      );
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+
+    return parts;
+  };
+
+  const safeCurrentAgent: keyof typeof agentInfo =
+    currentAgent in agentInfo ? currentAgent : 'master';
+  const CurrentAgentIcon = agentInfo[safeCurrentAgent].icon;
 
   return (
     <AnimatePresence mode="wait">
@@ -324,10 +500,35 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
               
               <span className="text-sm font-medium text-gray-700">Daily FinanceAI</span>
               
-              <button className="px-4 py-2 bg-gray-900 text-white text-sm rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors">
-                <Sparkles className="w-4 h-4" />
-                Upgrade
-              </button>
+              {status === 'authenticated' && session?.user ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    {session.user.image && (
+                      <img 
+                        src={session.user.image} 
+                        alt={session.user.name || 'User'} 
+                        className="w-8 h-8 rounded-full border-2 border-gray-200"
+                      />
+                    )}
+                    <span className="text-sm font-medium text-gray-700">{session.user.name}</span>
+                  </div>
+                  <button 
+                    onClick={() => signOut()}
+                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-full flex items-center gap-2 hover:bg-red-700 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => signIn('google')}
+                  className="px-4 py-2 bg-gray-900 text-white text-sm rounded-full flex items-center gap-2 hover:bg-gray-800 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login with Google
+                </button>
+              )}
             </motion.header>
 
             {showWelcome ? (
@@ -407,8 +608,65 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
 
                   {/* Input Area */}
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-lg p-2">
+                    {/* Hidden file input for document uploads via + button */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
                     <div className="flex items-center gap-3 px-4 py-2">
-                      <Plus className="w-5 h-5 text-gray-400" />
+                      <button
+                        type="button"
+                        onClick={handlePlusClick}
+                        className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors relative"
+                      >
+                        <Plus className="w-5 h-5" />
+                        {showUploadMenu && (
+                          <div className="absolute left-0 bottom-full mb-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUploadDocType('aadhaar');
+                                fileInputRef.current?.click();
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                            >
+                              Upload Aadhaar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUploadDocType('pan');
+                                fileInputRef.current?.click();
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                            >
+                              Upload PAN
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUploadDocType('salary_slip');
+                                fileInputRef.current?.click();
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                            >
+                              Upload Salary Slip
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUploadDocType('bank_statement');
+                                fileInputRef.current?.click();
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                            >
+                              Upload Bank Statement
+                            </button>
+                          </div>
+                        )}
+                      </button>
                       <input
                         ref={inputRef}
                         type="text"
@@ -467,17 +725,28 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
                         className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div className={`flex items-start gap-3 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                          {message.sender === 'bot' && (
-                            <div className={`w-10 h-10 bg-gradient-to-br ${agentInfo[message.agentType || 'master'].color} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                              {React.createElement(agentInfo[message.agentType || 'master'].icon, { className: "w-5 h-5 text-white" })}
-                            </div>
-                          )}
-                          <div className={`${
-                            message.sender === 'user' 
-                              ? 'bg-gray-900 text-white rounded-2xl rounded-tr-sm' 
-                              : 'bg-white/90 backdrop-blur-sm text-gray-800 rounded-2xl rounded-tl-sm shadow-lg border border-gray-100'
-                          } px-5 py-4`}>
-                            <p className="text-sm leading-relaxed whitespace-pre-line">{message.text}</p>
+                          {message.sender === 'bot' && (() => {
+                            const rawAgent = message.agentType || 'master';
+                            const safeAgent: keyof typeof agentInfo =
+                              rawAgent in agentInfo ? (rawAgent as keyof typeof agentInfo) : 'master';
+                            const AgentIcon = agentInfo[safeAgent].icon;
+                            const agentColor = agentInfo[safeAgent].color;
+                            return (
+                              <div className={`w-10 h-10 bg-gradient-to-br ${agentColor} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                                <AgentIcon className="w-5 h-5 text-white" />
+                              </div>
+                            );
+                          })()}
+                          <div
+                            className={`${
+                              message.sender === 'user'
+                                ? 'bg-gray-900 text-white rounded-2xl rounded-tr-sm'
+                                : 'bg-white text-gray-900 rounded-2xl rounded-tl-sm shadow-lg border border-gray-200'
+                            } px-5 py-4`}
+                          >
+                            <p className="text-sm leading-relaxed whitespace-pre-line">
+                              {message.sender === 'bot' ? renderMessageText(message.text) : message.text}
+                            </p>
                             <span className={`text-xs mt-2 block ${message.sender === 'user' ? 'text-gray-400' : 'text-gray-400'}`}>
                               {formatTime(message.timestamp)}
                             </span>
@@ -544,9 +813,64 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
                 <div className="px-8 py-4 relative z-10">
                   <div className="max-w-3xl mx-auto">
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-lg p-2">
+                      {/* Hidden file input for document uploads in chat mode */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
                       <div className="flex items-center gap-3 px-4 py-2">
-                        <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                        <button
+                          type="button"
+                          onClick={handlePlusClick}
+                          className="p-2 text-gray-400 hover:text-gray-600 transition-colors relative"
+                        >
                           <Paperclip className="w-5 h-5" />
+                          {showUploadMenu && (
+                            <div className="absolute left-0 bottom-full mb-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadDocType('aadhaar');
+                                  fileInputRef.current?.click();
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                              >
+                                Upload Aadhaar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadDocType('pan');
+                                  fileInputRef.current?.click();
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                              >
+                                Upload PAN
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadDocType('salary_slip');
+                                  fileInputRef.current?.click();
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                              >
+                                Upload Salary Slip
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUploadDocType('bank_statement');
+                                  fileInputRef.current?.click();
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100"
+                              >
+                                Upload Bank Statement
+                              </button>
+                            </div>
+                          )}
                         </button>
                         <input
                           ref={inputRef}
