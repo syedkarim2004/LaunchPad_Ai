@@ -1,0 +1,157 @@
+[
+  {
+    "platform": "Swiggy",
+    "type": "food_delivery",
+    "requirements": {
+      "mandatory_compliance": ["FSSAI"],
+      "business_type": ["Restaurant", "Cloud Kitchen", "Home Baker"],
+      "documents_required": [
+        "FSSAI License (Basic/State/Central)",
+        "PAN Card",
+        "GST Registration (if applicable)",
+        "Bank Account Details",
+        "Menu with prices",
+        "Restaurant photos"
+      ]
+    },
+    "estimated_cost": {
+      "registration_fee": 0,
+      "commission": "15-25% per order",
+      "currency": "INR"
+    },
+    "estimated_timeline": "7-14 days",
+    "rejection_reasons": [
+      "Invalid/expired FSSAI license",
+      "Poor quality restaurant photos",
+      "Incomplete documentation",
+      "Restaurant not meeting hygiene standards"
+    ],
+    "onboarding_steps": [
+      "Visit Swiggy partner website",
+      "Fill restaurant details",
+      "Upload FSSAI and other documents",
+      "Menu setup and pricing",
+      "Quality check visit by Swiggy team",
+      "Contract signing",
+      "Training and go-live"
+    ],
+    "contact": "partner-support@swiggy.in",
+    "website": "https://www.swiggy.com/partner-with-us"
+  },
+  {
+    "platform": "Zomato",
+    "type": "food_delivery",
+    "requirements": {
+      "mandatory_compliance": ["FSSAI"],
+      "business_type": ["Restaurant", "Cloud Kitchen", "Cafe"],
+      "documents_required": [
+        "FSSAI License",
+        "PAN Card",
+        "GST Certificate (if turnover > 40L)",
+        "Bank Account Proof",
+        "Restaurant photos",
+        "Menu card"
+      ]
+    },
+    "estimated_cost": {
+      "registration_fee": 0,
+      "commission": "18-25% per order",
+      "currency": "INR"
+    },
+    "estimated_timeline": "7-14 days",
+    "rejection_reasons": [
+      "No valid FSSAI license",
+      "Poor location visibility",
+      "Hygiene concerns",
+      "Incomplete KYC"
+    ],
+    "onboarding_steps": [
+      "Apply on Zomato for business",
+      "Submit restaurant details and documents",
+      "Menu cataloging",
+      "Restaurant audit by Zomato",
+      "Sign merchant agreement",
+      "Activation and training"
+    ],
+    "contact": "restaurant@zomato.com",
+    "website": "https://www.zomato.com/partner-with-us"
+  },
+  {
+    "platform": "Amazon",
+    "type": "ecommerce",
+    "requirements": {
+      "mandatory_compliance": ["GST"],
+      "business_type": ["Manufacturer", "Distributor", "Brand Owner"],
+      "documents_required": [
+        "GST Registration Certificate",
+        "PAN Card",
+        "Bank Account Details with cancelled cheque",
+        "Product images and descriptions",
+        "Brand authorization (if applicable)"
+      ]
+    },
+    "estimated_cost": {
+      "registration_fee": 0,
+      "referral_fee": "5-20% depending on category",
+      "closing_fee": "₹5-50 per item",
+      "currency": "INR"
+    },
+    "estimated_timeline": "3-7 days",
+    "rejection_reasons": [
+      "Invalid GST details",
+      "Bank account verification failure",
+      "Restricted category without approval",
+      "Poor product quality or fake products"
+    ],
+    "onboarding_steps": [
+      "Register on Amazon Seller Central",
+      "Complete business verification",
+      "Upload tax and bank details",
+      "List products with images and details",
+      "Set pricing and inventory",
+      "Complete training modules",
+      "Start selling"
+    ],
+    "contact": "sell@amazon.in",
+    "website": "https://sell.amazon.in"
+  },
+  {
+    "platform": "Flipkart",
+    "type": "ecommerce",
+    "requirements": {
+      "mandatory_compliance": ["GST"],
+      "business_type": ["Manufacturer", "Wholesaler", "Retailer"],
+      "documents_required": [
+        "GST Certificate",
+        "PAN Card",
+        "Bank Account Statement",
+        "Cancelled cheque",
+        "Signature proof"
+      ]
+    },
+    "estimated_cost": {
+      "registration_fee": 0,
+      "commission": "5-25% depending on category",
+      "fixed_fee": "₹5-50 per item",
+      "currency": "INR"
+    },
+    "estimated_timeline": "5-10 days",
+    "rejection_reasons": [
+      "GST verification failed",
+      "Selling restricted items",
+      "Counterfeit products",
+      "Poor seller rating history"
+    ],
+    "onboarding_steps": [
+      "Register on Flipkart Seller Hub",
+      "Verify mobile and email",
+      "Submit business documents",
+      "Complete KYC verification",
+      "List products and set pricing",
+      "Quality check by Flipkart",
+      "Go live"
+    ],
+    "contact": "seller-support@flipkart.com",
+    "website": "https://seller.flipkart.com"
+  }
+]

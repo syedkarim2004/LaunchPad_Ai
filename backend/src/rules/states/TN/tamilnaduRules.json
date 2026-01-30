@@ -1,0 +1,77 @@
+[
+  {
+    "id": "TN_SHOPS_ACT",
+    "name": "Tamil Nadu Shops and Establishments Act Registration",
+    "level": "state",
+    "state": "Tamil Nadu",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Tamil Nadu" },
+      { "field": "has_physical_store", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "PAN Card",
+      "Aadhaar Card",
+      "Address proof of business",
+      "NOC from landlord",
+      "Partnership deed (if applicable)"
+    ],
+    "estimated_cost": {
+      "min": 100,
+      "max": 500,
+      "currency": "INR"
+    },
+    "estimated_timeline": "5-10 days",
+    "penalty": "₹1,000 to ₹5,000 fine",
+    "authority": "Labour Department, Government of Tamil Nadu",
+    "authority_website": "https://labour.tn.gov.in",
+    "description": "Registration under TN Shops Act is mandatory for all commercial establishments. Must be obtained within 30 days of starting business.",
+    "steps": [
+      "Visit TN e-Sevai portal",
+      "Fill online application",
+      "Upload documents",
+      "Pay fees",
+      "Download certificate"
+    ],
+    "dependencies": [],
+    "source": "https://labour.tn.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "TN_TRADE_LICENSE",
+    "name": "Tamil Nadu Trade License",
+    "level": "local",
+    "state": "Tamil Nadu",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Tamil Nadu" }
+    ],
+    "documents_required": [
+      "Property tax receipt",
+      "Identity proof",
+      "Address proof",
+      "Building approval plan",
+      "NOC from fire department (for large establishments)"
+    ],
+    "estimated_cost": {
+      "min": 500,
+      "max": 5000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "15-30 days",
+    "penalty": "Closure of business and fine",
+    "authority": "Corporation/Municipality/Panchayat",
+    "authority_website": "https://chennaicorporation.gov.in",
+    "description": "Trade license from local body is required for operating any business. Annual renewal required.",
+    "steps": [
+      "Apply at local corporation office",
+      "Submit application with documents",
+      "Pay prescribed fees",
+      "Site inspection",
+      "License issuance"
+    ],
+    "dependencies": [],
+    "source": "https://chennaicorporation.gov.in",
+    "last_verified": "2026-01-15"
+  }
+]

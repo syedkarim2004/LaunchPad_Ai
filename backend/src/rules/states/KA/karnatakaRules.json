@@ -1,0 +1,81 @@
+[
+  {
+    "id": "KA_SHOPS_ACT",
+    "name": "Karnataka Shops and Commercial Establishments Act Registration",
+    "level": "state",
+    "state": "Karnataka",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Karnataka" },
+      { "field": "has_physical_store", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "PAN Card",
+      "Shop ownership/rent agreement",
+      "Electricity bill",
+      "Owner's identity proof",
+      "Address proof"
+    ],
+    "estimated_cost": {
+      "min": 300,
+      "max": 1500,
+      "currency": "INR"
+    },
+    "estimated_timeline": "7-14 days",
+    "penalty": "₹5,000 fine for non-registration",
+    "authority": "Labour Department, Government of Karnataka",
+    "authority_website": "https://labour.karnataka.gov.in",
+    "description": "All shops and commercial establishments in Karnataka employing one or more persons must register under the Karnataka Shops and Commercial Establishments Act. Registration must be done within 30 days of starting the business.",
+    "steps": [
+      "Visit Karnataka Labour Department portal",
+      "Fill Form A (application form)",
+      "Upload required documents",
+      "Pay registration fees online",
+      "Submit application",
+      "Receive registration certificate"
+    ],
+    "dependencies": [],
+    "source": "https://labour.karnataka.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "KA_TRADE_LICENSE",
+    "name": "Karnataka Trade License",
+    "level": "local",
+    "state": "Karnataka",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Karnataka" },
+      { "field": "has_physical_store", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "Identity proof of owner",
+      "Address proof of business premises",
+      "Ownership document/Rent agreement",
+      "NOC from property owner",
+      "Passport size photographs"
+    ],
+    "estimated_cost": {
+      "min": 500,
+      "max": 5000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "15-30 days",
+    "penalty": "₹10,000 fine for operating without license",
+    "authority": "Municipal Corporation/Panchayat",
+    "authority_website": "https://bbmp.gov.in",
+    "description": "Trade license is mandatory for all businesses operating in Karnataka. It is issued by local municipal corporations or panchayats. The license needs to be renewed annually.",
+    "steps": [
+      "Visit local municipal corporation website",
+      "Download and fill application form",
+      "Attach required documents",
+      "Submit at municipal office or online portal",
+      "Pay fees (varies by business type and area)",
+      "Inspection by municipal officer",
+      "License issued after verification"
+    ],
+    "dependencies": [],
+    "source": "https://bbmp.gov.in",
+    "last_verified": "2026-01-15"
+  }
+]

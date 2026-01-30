@@ -1,0 +1,80 @@
+[
+  {
+    "id": "DL_SHOPS_ACT",
+    "name": "Delhi Shops and Establishments Act Registration",
+    "level": "state",
+    "state": "Delhi",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Delhi" },
+      { "field": "has_physical_store", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "PAN Card",
+      "Aadhaar Card",
+      "Proof of business premises",
+      "NOC from landlord",
+      "Photographs of establishment"
+    ],
+    "estimated_cost": {
+      "min": 200,
+      "max": 1000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "7-14 days",
+    "penalty": "₹5,000 to ₹25,000 fine",
+    "authority": "Labour Department, Government of NCT of Delhi",
+    "authority_website": "https://labour.delhi.gov.in",
+    "description": "All shops and commercial establishments in Delhi must register within 30 days of commencement. Registration is valid for 5 years.",
+    "steps": [
+      "Visit edistrict.delhigovt.nic.in",
+      "Create account and login",
+      "Apply for Shop Registration",
+      "Fill application form online",
+      "Upload required documents",
+      "Pay fees online",
+      "Download registration certificate"
+    ],
+    "dependencies": [],
+    "source": "https://labour.delhi.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "DL_HEALTH_LICENSE",
+    "name": "Delhi Health Trade License",
+    "level": "local",
+    "state": "Delhi",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Delhi" },
+      { "field": "sells_food", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "FSSAI License",
+      "Shop Registration Certificate",
+      "Property documents",
+      "Identity proof",
+      "Photographs"
+    ],
+    "estimated_cost": {
+      "min": 1000,
+      "max": 5000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "15-30 days",
+    "penalty": "License cancellation and fine",
+    "authority": "Municipal Corporation of Delhi (MCD)",
+    "authority_website": "https://mcdonline.nic.in",
+    "description": "Health trade license is mandatory for all food-related businesses in Delhi. Requires valid FSSAI license.",
+    "steps": [
+      "Obtain FSSAI license first",
+      "Apply on MCD portal",
+      "Submit documents and fees",
+      "Health inspection",
+      "License issuance"
+    ],
+    "dependencies": ["FSSAI"],
+    "source": "https://mcdonline.nic.in",
+    "last_verified": "2026-01-15"
+  }
+]

@@ -1,0 +1,78 @@
+[
+  {
+    "id": "MH_SHOPS_ACT",
+    "name": "Maharashtra Shops and Establishments Act Registration",
+    "level": "state",
+    "state": "Maharashtra",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Maharashtra" },
+      { "field": "has_physical_store", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "PAN Card",
+      "Aadhaar Card",
+      "Proof of business premises",
+      "Partnership deed (if applicable)",
+      "Memorandum of Association (for companies)"
+    ],
+    "estimated_cost": {
+      "min": 120,
+      "max": 2000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "3-7 days",
+    "penalty": "₹2,000 to ₹10,000 fine",
+    "authority": "Labour Department, Government of Maharashtra",
+    "authority_website": "https://mahakamgar.maharashtra.gov.in",
+    "description": "All shops and commercial establishments in Maharashtra must register within 30 days of commencement. The registration is valid for the lifetime of the establishment.",
+    "steps": [
+      "Visit Aaple Sarkar portal",
+      "Fill online application form",
+      "Upload documents",
+      "Pay registration fees",
+      "Submit application",
+      "Download registration certificate"
+    ],
+    "dependencies": [],
+    "source": "https://mahakamgar.maharashtra.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "MH_TRADE_LICENSE",
+    "name": "Maharashtra Trade License",
+    "level": "local",
+    "state": "Maharashtra",
+    "mandatory": true,
+    "conditions": [
+      { "field": "state", "operator": "=", "value": "Maharashtra" }
+    ],
+    "documents_required": [
+      "Proof of ownership/Rent agreement",
+      "NOC from owner",
+      "Business entity proof (PAN, GST, etc.)",
+      "Identity and address proof",
+      "Property tax receipt"
+    ],
+    "estimated_cost": {
+      "min": 1000,
+      "max": 10000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "15-30 days",
+    "penalty": "Business closure and fine",
+    "authority": "Municipal Corporation",
+    "authority_website": "https://portal.mcgm.gov.in",
+    "description": "All businesses in Maharashtra need a trade license from the local municipal corporation. License must be renewed annually.",
+    "steps": [
+      "Apply at local municipal office or online",
+      "Submit application with documents",
+      "Pay prescribed fees",
+      "Site inspection by authorities",
+      "License issued after approval"
+    ],
+    "dependencies": [],
+    "source": "https://portal.mcgm.gov.in",
+    "last_verified": "2026-01-15"
+  }
+]

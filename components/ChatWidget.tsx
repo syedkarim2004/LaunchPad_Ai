@@ -115,10 +115,8 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
   const { theme, toggleTheme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<keyof typeof agentInfo>('master');
   const [showWelcome, setShowWelcome] = useState(true);
-  const [isConnected, setIsConnected] = useState(false);
   const [showUploadMenu, setShowUploadMenu] = useState(false);
   const [uploadDocType, setUploadDocType] = useState<'aadhaar' | 'pan' | 'salary_slip' | 'bank_statement'>('aadhaar');
   const [customerId, setCustomerId] = useState<string>('guest');
@@ -127,8 +125,9 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const websocketRef = useRef<WebSocket | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isConnected, setIsConnected] = useState(true); // Always connected for REST API
+  const [isTyping, setIsTyping] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -257,9 +256,8 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
     }
   }, [initialMessage, isExpanded]);
 
-  // Connect to backend WebSocket for real agent responses
+  // Setup user ID for REST API
   useEffect(() => {
-    // Connect for both authenticated users and guests
     // For guests, use "guest" as the customer ID
     // For authenticated users, use their email
     const currentCustomerId = status === 'authenticated' && session?.user?.email
@@ -267,102 +265,59 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
       : 'guest';
     
     setCustomerId(currentCustomerId);
-    
-    const wsUrl = `ws://localhost:8000/ws/chat/${currentCustomerId}`;
-    const ws = new WebSocket(wsUrl);
-    websocketRef.current = ws;
-
-    ws.onopen = () => {
-      console.log('Chat WebSocket connected');
-      setIsConnected(true);
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'bot_message') {
-          const newMessage: Message = {
-            id: Date.now().toString(),
-            text: data.content,
-            sender: 'bot',
-            timestamp: new Date(),
-            agentType: data.agent as any
-          };
-          setMessages(prev => [...prev, newMessage]);
-          const incomingAgent = (data.agent as string) || 'master';
-          const safeAgent: keyof typeof agentInfo =
-            (incomingAgent in agentInfo ? incomingAgent : 'master') as keyof typeof agentInfo;
-          setCurrentAgent(safeAgent);
-          setIsTyping(false);
-        }
-      } catch (e) {
-        console.error('Failed to parse WS message', e);
-      }
-    };
-
-    ws.onerror = (event) => {
-      console.error('Chat WebSocket error', event);
-      setIsConnected(false);
-    };
-
-    ws.onclose = () => {
-      console.log('Chat WebSocket closed');
-      setIsConnected(false);
-    };
-
-    return () => {
-      ws.close();
-      websocketRef.current = null;
-      setIsConnected(false);
-    };
   }, [session, status]);
 
-  const simulateBotResponse = (userMessage: string) => {
+  const simulateBotResponse = async (userMessage: string) => {
     setIsTyping(true);
 
-    // If WebSocket is connected, send the message to backend and let agents respond
-    if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-      websocketRef.current.send(JSON.stringify({ content: userMessage }));
-      return;
+    try {
+      // Send message to REST API backend
+      const response = await fetch('http://localhost:5000/api/chat/simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': customerId
+        },
+        body: JSON.stringify({
+          message: userMessage
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: data.data?.message || data.message || 'Sorry, I had trouble processing your request.',
+          sender: 'bot',
+          timestamp: new Date(),
+          agentType: data.data?.agent_used || data.agent_used || 'master'
+        };
+        setMessages(prev => [...prev, newMessage]);
+        const incomingAgent = (data.data?.agent_used || data.agent_used as string) || 'master';
+        const safeAgent: keyof typeof agentInfo =
+          (incomingAgent in agentInfo ? incomingAgent : 'master') as keyof typeof agentInfo;
+        setCurrentAgent(safeAgent);
+        setIsTyping(false);
+        return;
+      } else {
+        const errorData = await response.json();
+        console.error('Chat API error:', errorData);
+        throw new Error(`API Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error calling chat API:', error);
     }
 
-    // Fallback: use existing mock responses (in case backend is down)
-    const lowerMessage = userMessage.toLowerCase();
-    let responseAgent: keyof typeof agentInfo = 'master';
-    let responseText = '';
-    let delay = 1500;
-
-    if (lowerMessage.includes('loan') || lowerMessage.includes('interest') || lowerMessage.includes('amount')) {
-      responseAgent = 'sales';
-      responseText = "Great choice! 🎉 I can help you understand business financing options. But first, let me help you get your business registered and compliant.\n\n• MSME Registration\n• GST Registration\n• Business Licenses\n\nWhat type of business are you starting?";
-    } else if (lowerMessage.includes('eligibility') || lowerMessage.includes('check') || lowerMessage.includes('compliance')) {
-      responseAgent = 'verification';
-      responseText = "Let me check your compliance requirements! I can help with:\n\n✅ GST Registration Status\n✅ MSME/Udyam Registration\n✅ Required Licenses\n✅ Filing Deadlines\n\nWhat industry is your business in?";
-    } else if (lowerMessage.includes('amazon') || lowerMessage.includes('flipkart') || lowerMessage.includes('platform') || lowerMessage.includes('list')) {
-      responseAgent = 'underwriting';
-      responseText = "I can guide you through e-commerce platform onboarding!\n\n🛒 Amazon Seller Central\n🛍️ Flipkart Seller Hub\n🍔 Swiggy/Zomato Partner\n📦 Meesho Supplier\n\nWhich platform would you like to get started with?";
-    } else if (lowerMessage.includes('register') || lowerMessage.includes('start') || lowerMessage.includes('business') || lowerMessage.includes('yes')) {
-      responseAgent = 'sanction';
-      responseText = "Excellent! 🎊 Let's get your business registered!\n\n📝 Step 1: Choose business structure\n📋 Step 2: Gather documents\n✅ Step 3: Register online\n🎉 Step 4: Get your certificate\n\nWhat type of business are you planning - Sole Proprietorship, Partnership, LLP, or Private Limited?";
-      delay = 2500;
-    } else {
-      responseAgent = 'master';
-      responseText = "I'd be happy to help you launch your business! As your Business Launch Copilot, I can assist with:\n\n• Business Registration (MSME, GST, etc.)\n• License & Compliance Requirements\n• E-commerce Platform Onboarding\n• Document Preparation\n\nWhat would you like to start with?";
-    }
-
-    setCurrentAgent(responseAgent);
-
-    setTimeout(() => {
-      setIsTyping(false);
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: responseText,
-        sender: 'bot',
-        timestamp: new Date(),
-        agentType: responseAgent
-      };
-      setMessages(prev => [...prev, newMessage]);
-    }, delay);
+    // Fallback: show error message instead of hardcoded responses
+    setIsTyping(false);
+    const errorMessage: Message = {
+      id: Date.now().toString(),
+      text: 'Sorry, I\'m having trouble connecting to the AI service right now. Please try again in a moment.',
+      sender: 'bot',
+      timestamp: new Date(),
+      agentType: 'master'
+    };
+    setMessages(prev => [...prev, errorMessage]);
   };
 
   const handleSend = () => {
@@ -462,7 +417,7 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
       // Use email if logged in, otherwise use 'guest' identifier
       formData.append('customer_id', session?.user?.email || customerId);
 
-      const response = await fetch('http://localhost:8000/api/documents/upload', {
+      const response = await fetch('http://localhost:5000/api/documents/upload', {
         method: 'POST',
         body: formData,
       });
@@ -519,11 +474,11 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
       let url = match[2];
 
       // If backend sends a relative /uploads path or a localhost:3000/uploads URL,
-      // rewrite it to point to the backend (port 8000) which actually serves the files.
+      // rewrite it to point to the backend (port 5000) which actually serves the files.
       if (url.startsWith('/uploads')) {
-        url = `http://localhost:8000${url}`;
+        url = `http://localhost:5000${url}`;
       } else if (url.startsWith('http://localhost:3000/uploads') || url.startsWith('https://localhost:3000/uploads')) {
-        url = url.replace('localhost:3000', 'localhost:8000');
+        url = url.replace('localhost:3000', 'localhost:5000');
       }
       parts.push(
         <a
@@ -597,10 +552,13 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
                 ) : (
                   <div className="space-y-1 px-3">
                     {chatHistory.map((chat) => (
-                      <button
+                      <div
                         key={chat.id}
                         onClick={() => loadSession(chat.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left group transition-all ${
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && loadSession(chat.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left group transition-all cursor-pointer ${
                           currentSessionId === chat.id
                             ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'
                             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-transparent'
@@ -614,7 +572,7 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
                         >
                           <Trash2 className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400" />
                         </button>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -808,12 +766,16 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
                       onChange={handleFileChange}
                     />
                     <div className="flex items-center gap-3 px-4 py-2">
-                      <button
-                        type="button"
-                        onClick={handlePlusClick}
-                        className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative"
+                      <div
+                        className="relative"
                       >
-                        <Plus className="w-5 h-5" />
+                        <button
+                          type="button"
+                          onClick={handlePlusClick}
+                          className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
                         {showUploadMenu && (
                           <div className="absolute left-0 bottom-full mb-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20">
                             <button
@@ -858,7 +820,7 @@ export default function ChatWidget({ isExpanded, onExpand, onCollapse, initialMe
                             </button>
                           </div>
                         )}
-                      </button>
+                      </div>
                       <input
                         ref={inputRef}
                         type="text"

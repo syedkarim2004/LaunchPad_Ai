@@ -1,0 +1,149 @@
+[
+  {
+    "id": "GST",
+    "name": "Goods and Services Tax Registration",
+    "level": "central",
+    "mandatory": false,
+    "conditions": [
+      { "field": "annual_turnover", "operator": ">", "value": 4000000 }
+    ],
+    "documents_required": [
+      "PAN Card",
+      "Aadhaar Card",
+      "Business Address Proof",
+      "Bank Account Statement",
+      "Business Registration Certificate"
+    ],
+    "estimated_cost": {
+      "min": 0,
+      "max": 5000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "7-15 days",
+    "penalty": "₹50/day for late filing",
+    "authority": "Goods and Services Tax Network (GSTN)",
+    "authority_website": "https://www.gst.gov.in",
+    "description": "GST registration is mandatory for businesses with annual turnover exceeding ₹40 lakhs (₹20 lakhs for special category states). It enables you to collect GST from customers and claim input tax credit.",
+    "steps": [
+      "Visit GST portal and create account",
+      "Fill Part A of registration form with PAN",
+      "Verify mobile and email",
+      "Fill Part B with business details",
+      "Upload required documents",
+      "Submit application with digital signature",
+      "Wait for verification and approval"
+    ],
+    "dependencies": [],
+    "source": "https://www.gst.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "FSSAI",
+    "name": "Food Safety and Standards Authority of India License",
+    "level": "central",
+    "mandatory": true,
+    "conditions": [
+      { "field": "sells_food", "operator": "=", "value": true }
+    ],
+    "documents_required": [
+      "Form B (Application form)",
+      "Photo ID proof",
+      "Business premises proof",
+      "Food safety management certificate",
+      "List of food products"
+    ],
+    "estimated_cost": {
+      "min": 100,
+      "max": 7500,
+      "currency": "INR"
+    },
+    "estimated_timeline": "30-60 days",
+    "penalty": "₹25,000 fine and/or imprisonment up to 6 months",
+    "authority": "Food Safety and Standards Authority of India",
+    "authority_website": "https://www.fssai.gov.in",
+    "description": "FSSAI license is mandatory for all food business operators including manufacturers, traders, distributors, and online platforms. There are three types: Basic (turnover < ₹12 lakh), State (₹12 lakh to ₹20 crore), and Central (> ₹20 crore).",
+    "steps": [
+      "Determine license type based on turnover",
+      "Register on FSSAI FoSCoS portal",
+      "Fill application form (Form A or B)",
+      "Upload documents and pay fees",
+      "Submit application",
+      "Inspection by food safety officer (if required)",
+      "License issuance"
+    ],
+    "dependencies": [],
+    "source": "https://www.fssai.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "UDYAM",
+    "name": "Udyam Registration (MSME)",
+    "level": "central",
+    "mandatory": false,
+    "conditions": [
+      { "field": "employee_count", "operator": "<=", "value": 250 },
+      { "field": "annual_turnover", "operator": "<=", "value": 500000000 }
+    ],
+    "documents_required": [
+      "Aadhaar Number",
+      "PAN Card",
+      "Business details"
+    ],
+    "estimated_cost": {
+      "min": 0,
+      "max": 0,
+      "currency": "INR"
+    },
+    "estimated_timeline": "1-2 days",
+    "penalty": null,
+    "authority": "Ministry of Micro, Small and Medium Enterprises",
+    "authority_website": "https://udyamregistration.gov.in",
+    "description": "Udyam Registration provides MSMEs with various benefits including collateral-free loans, subsidies, tax benefits, and priority sector lending. It's completely free and online.",
+    "steps": [
+      "Visit Udyam Registration portal",
+      "Enter Aadhaar number for OTP verification",
+      "Fill business details (name, type, location)",
+      "Enter investment and turnover details",
+      "Submit - Udyam certificate generated instantly"
+    ],
+    "dependencies": [],
+    "source": "https://udyamregistration.gov.in",
+    "last_verified": "2026-01-15"
+  },
+  {
+    "id": "TRADE_MARK",
+    "name": "Trademark Registration",
+    "level": "central",
+    "mandatory": false,
+    "conditions": [],
+    "documents_required": [
+      "Trademark logo/wordmark",
+      "Applicant details",
+      "Goods/services classification",
+      "Power of attorney (if using agent)"
+    ],
+    "estimated_cost": {
+      "min": 4500,
+      "max": 20000,
+      "currency": "INR"
+    },
+    "estimated_timeline": "18-24 months",
+    "penalty": null,
+    "authority": "Controller General of Patents, Designs and Trade Marks",
+    "authority_website": "https://ipindia.gov.in",
+    "description": "Trademark registration protects your brand name, logo, or slogan from unauthorized use. Valid for 10 years and renewable indefinitely.",
+    "steps": [
+      "Conduct trademark search",
+      "File application on IP India portal",
+      "Pay application fees",
+      "Wait for examination report (3-4 months)",
+      "Respond to objections if any",
+      "Publication in trademark journal",
+      "Wait for opposition period (4 months)",
+      "Registration certificate issued"
+    ],
+    "dependencies": [],
+    "source": "https://ipindia.gov.in",
+    "last_verified": "2026-01-15"
+  }
+]
